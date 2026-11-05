@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/ksh
 # Load Leveler Script skeleton for monthly and annual mean fields
 # valid for ADA, and any LL machine, when the data are kept in the 
 # WORKING directory
 #  This skeleton is transformed to running script for a given year
-# with RUN_calmoy YEAR, when BATCH is ADA in config_moy
+# with RUN_calmoy.ksh YEAR, when BATCH is ADA in config_moy.ksh
 
 # @ job_name = zcalmoy
 
@@ -41,11 +41,11 @@ CASE=<CASE>
 
 CONFCASE=${CONFIG}-${CASE}
 # define a temporary CTL/CDF dir for holding temporary script (not HOME)
-# This WPDIR must be the same as in RUN_calmoy.ADA !
+# This WPDIR must be the same as in RUN_calmoy.ADA.ksh !
 WPDIR=$WORKDIR/RUN_${CONFIG}/${CONFIG}-${CASE}/CTL/CDF
 
 cd $WPDIR
-. ./config_moy
+. ./config_moy.ksh
 
 
 case $LOADL_STEP_NAME in 
@@ -54,7 +54,7 @@ case $LOADL_STEP_NAME in
     liste=''
     for m in $(seq 1 12 ) ; do
       mm=$(printf "%02d" $m )
-      liste="$liste ./zz_calmoy_${mm}_<year>"
+      liste="$liste ./zz_calmoy_${mm}_<year>.ksh"
     done
     poe $WORKDIR/bin/mpi_shell $liste
   ;;
@@ -63,13 +63,13 @@ case $LOADL_STEP_NAME in
     liste=''
     for m in $(seq 1 12 ) ; do
        mm=$(printf "%02d" $m )
-       liste="$liste ./zz_calmoyvt_${mm}_<year>"
+       liste="$liste ./zz_calmoyvt_${mm}_<year>.ksh"
     done
     poe $WORKDIR/bin/mpi_shell $liste
   ;;
 
   zyearly<year> )
-   ./mvcalmoy <year>
+   ./mvcalmoy.ksh <year>
   ;;
 
 esac

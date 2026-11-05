@@ -1,32 +1,22 @@
-#!/bin/bash
-#key_jade -N zmetamon
-#key_jade -l select=<NB_NODES>:ncpus=<MPIPROC>:mpiprocs=<MPIPROC>
-#key_jade -l walltime=<WALLTIME>
-#key_jade -l cluster=hpt
-#key_jade -M <MAIL>
-#key_jade -mb -me
-#key_jade -v NB_NODES=<NB_NODES>
+#!/bin/ksh
+#SBATCH --job-name=<JBNAME>
+#SBATCH --partition=cpu
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=15G
+#SBATCH --time=<WALLTIME>
+#SBATCH --output=./JOBS-OUT/<JBNAME>.%j.out
 
-#key_vayu -N zmetamon
-#key_vayu -l ncpus=<MPIPROC>
-#key_vayu -l walltime=<WALLTIME>
-#key_vayu -M <MAIL>
-#key_vayu -mb -me
-#key_vayu -Wgroup_list=v45
-#key_vayu -P x77
-#key_vayu -q normal
-#key_vayu -v NB_NODES=<NB_NODES>
+source /usr/share/Modules/init/bash
+module load DCM/4.2.3
+conda activate My-JupDask-2026-10
+module list
 
-#key_jean-zay --nodes=<NB_NODES>
-#key_jean-zay --ntasks=<NB_NPROC>
-#key_jean-zay --ntasks-per-node=<MPIPROC>
-#key_jean-zay --threads-per-core=1
-#key_jean-zay -A <ACCOUNT>
-#key_jean-zay -J zmetamon
-#key_jean-zay -e zmetamon.e%j
-#key_jean-zay -o zmetamon.o%j
-#key_jean-zay --time=<WALLTIME>
-#key_jean-zay --exclusive
+# To set the proper paths for NETCDF library
+source /project/oh/drakkar/LIBRAIRIES/NETCDF/env_netcdf_gnu.sh
+
+cd $SLURM_SUBMIT_DIR
+# Show the nodes list
+sinfo -N
 
 #SBATCH --nodes=<NB_NODES>
 #SBATCH --ntasks=<NB_NPROC>
@@ -35,61 +25,29 @@
 #SBATCH -J zmetamon
 #SBATCH -e zmetamon.e%j
 #SBATCH -o zmetamon.o%j
-#SBATCH --constraint=<NODETYPE>
 #SBATCH --time=<WALLTIME>
 #SBATCH --exclusive
 
-#MSUB -r zmetamon
-#MSUB -n  <NB_NPROC>
-#MSUB -N  <NB_NODES>
-#MSUB -T <WALLTIME>
-#MSUB -q <QUEUE>
-#MSUB -o zmetamon.%I
-#MSUB -e zmetamon.%I
-#MSUB -A <ACCOUNT>
-
-#$ -N zmetamon 
-#$ -cwd
-#$ -j y
-#$ -S /bin/bash
-#$ -pe one <NB_NPROC>
-#$ -v NB_NODES=<NB_NODES>
-
-### LoadLeveler on ULAM and VARGAS
-## title of the run
-# @ job_name = zmetamon
-## Output listing location
-# @ output = $(job_name).$(jobid)
-# @ error  = $(output)
-# @ job_type = <JOBTYPE>
-### DO NEVER ERASE THE FOLLOWING LINE
-#ifloadlev# @ total_tasks = <NB_NPROC>
-# specifique Adapp
-# @ requirements = (Feature == "prepost")
-# @ wall_clock_limit = <WALLTIME>
-# @ as_limit = 3.2gb
-# @ queue
-
 ## If R_MONITOR is a TMPDIR created by the job manager :
-## the scripts copied by RUN_metamon are lost in the haze of a forgotten no man's land
+## the scripts copied by RUN_metamon.ksh are lost in the haze of a forgotten no man's land
 ## so we copy another time. If they are already there, it could do no harm
 
 RNDTMPDIR=<RNDTMPDIR>
 
 if [ $RNDTMPDIR == 1 ] ; then
 
-cp ./config_def         $TMPDIR
-cp ./function_def       $TMPDIR
+cp ./config_def.ksh         $TMPDIR
+cp ./function_def.ksh       $TMPDIR
 
 cd $TMPDIR
 
-. ./config_def
-. ./function_def
+. ./config_def.ksh
+. ./function_def.ksh
 
-cp $PRODTOOLS/create_sections_list    $TMPDIR
+cp $PRODTOOLS/create_sections_list.ksh    $TMPDIR
 cp $PRODTOOLS/drakkar_sections_table.txt  $TMPDIR
 cp $PRODTOOLS/drakkar_trpsig_table.txt    $TMPDIR
-cp $PRODTOOLS/monitor_prod            $TMPDIR
+cp $PRODTOOLS/monitor_prod.ksh            $TMPDIR
 
 if [ $useMPI == 1 ] ; then cp $MPITOOLS/mpi_metamon $TMPDIR ; fi
 
@@ -97,8 +55,8 @@ else
 
 cd <R_MONITOR>
 
-. ./config_def
-. ./function_def
+. ./config_def.ksh
+. ./function_def.ksh
 
 fi
 
@@ -116,9 +74,6 @@ if [ $useMPI = 1 ] ; then
 if [ $MACHINE = 'jade' ] ; then
    mpiexec_mpt -n <NB_NPROC> ./mpi_metamon $YEARS
 elif [ $MACHINE = 'occigen' ] ; then
-   ulimit -s unlimited
-   srun --mpi=pmi2 -n <NB_NPROC>  ./mpi_metamon $YEARS
-elif [ $MACHINE = 'occigen2' -o $MACHINE = 'jean-zay' ] ; then
    ulimit -s unlimited
    srun --mpi=pmi2 -n <NB_NPROC>  ./mpi_metamon $YEARS
 elif [ $MACHINE = 'curie' ] ; then
@@ -142,17 +97,19 @@ else
 ### this allows to ensure compatibility for most of the tags
   if [ ${#yinit} -gt 4 ] ; then
      # interannual plot
-     chmod +x monitor_prod
-     ./monitor_prod $yinit
+     chmod +x monitor_prod.ksh
+     ./monitor_prod.ksh $yinit
   elif [ ${#yinit} -gt 4 ] ; then
      # standard modern year
-     chmod +x monitor_prod
-     ./monitor_prod $yinit
+     chmod +x monitor_prod.ksh
+     ./monitor_prod.ksh $yinit
   else
      # climato runs
      yinit=$( printf "%04d" $yinit ) 
-     chmod +x monitor_prod
-     ./monitor_prod $yinit
+     chmod +x monitor_prod.ksh
+     for loopy in `echo $YEARS`  ; do 
+     	./monitor_prod.ksh $loopy
+     done
   fi
 
 

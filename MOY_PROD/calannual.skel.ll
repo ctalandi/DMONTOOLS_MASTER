@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/ksh
 
 year=<YYYY>
 
 set -x
 
-. ./config_moy
-. ./function_moy
+. ./config_moy.ksh
+. ./function_moy.ksh
 
 cd $TMPDIR
 

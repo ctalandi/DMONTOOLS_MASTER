@@ -1,0 +1,34 @@
+#!/bin/ksh
+#PBS -l mem=15g
+#PBS -l walltime=00:40:00
+
+cd $PBS_O_WORKDIR
+
+qstat -f $PBS_JOBID
+echo $TMPDIR
+echo $SCRATCH
+echo $DATAWORK
+echo $HOST
+pbsnodes $HOST
+
+source /usr/share/Modules/3.2.10/init/ksh
+load  module purge
+ module load   NETCDF/4.3.3.1-mpt-intel2016
+ module load   nco/4.6.4_gcc-6.3.0
+module list
+
+
+ulimit -s unlimited
+set -x
+CONFIG=<CONFIG>
+CASE=<CASE>
+
+CONFCASE=${CONFIG}-${CASE}
+CTL_DIR=<WPDIR>
+
+#. $HOME/.profile
+cd $CTL_DIR
+. ./config_moy.ksh
+
+./zz_calmoyvt_<month>_<year>.ksh
+

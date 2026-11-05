@@ -1,0 +1,28 @@
+#!/bin/ksh
+#SBATCH --mem=30mb
+#SBATCH --time=00:30:00
+#SBATCH --job-name=<JBNAME>
+#SBATCH --output=./JOBS-OUT/<JBNAME>.%j.out
+
+cd $SLURM_SUBMIT_DIR
+
+echo $HOST
+
+source /usr/share/Modules/init/bash
+conda activate My-JupDask-2026-10
+module list
+
+ulimit -s unlimited
+set -x
+CONFIG=<CONFIG>
+CASE=<CASE>
+
+CONFCASE=${CONFIG}-${CASE}
+CTL_DIR=<WPDIR>
+
+#. $HOME/.profile
+cd $CTL_DIR
+. ./config_moy.ksh
+
+./zz_calmoy_<month>_<year>.ksh
+
